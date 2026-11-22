@@ -1,0 +1,6 @@
+{
+  "name": "Lumen Studio",
+  "description": "AI Headshot Photographer studio that transforms casual selfies into professional headshots with AI analysis, prompt retouching, and before/after comparison.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Lumen Studio</string>
+    <string name="nav_studio">Studio</string>
+    <string name="nav_library">Library</string>
+    <string name="studio_subtitle">AI HEADSHOT DARKROOM</string>
+    <string name="action_choose_selfie">Choose Selfie</string>
+    <string name="action_take_selfie">Take Selfie</string>
+    <string name="action_analyze_selfie">Analyze Selfie</string>
+    <string name="action_develop_headshot">Develop Headshot</string>
+    <string name="action_save_to_photos">Save to Photos</string>
+    <string name="action_compare">Compare</string>
+    <string name="action_retouch">Retouch</string>
+    <string name="action_apply_retouch">Apply Retouch</string>
+    <string name="action_deep_art_direction">Deep Art Direction</string>
+    <string name="label_original">ORIGINAL</string>
+    <string name="label_studio">STUDIO</string>
+    <string name="label_developing">Developing portrait in darkroom…</string>
+    <string name="label_developing_hint">Studio synthesis typically takes 25–55 seconds</string>
+    <string name="label_retouching">Applying darkroom retouch…</string>
+    <string name="label_analyzing">Inspecting lighting, framing &amp; lens readiness…</string>
+    <string name="label_thinking">Consulting Senior Art Director (High Thinking)…</string>
+    <string name="empty_library_title">Your contact sheet is empty</string>
+    <string name="empty_library_body">Develop your first studio headshot from a casual selfie and it will appear here automatically.</string>
+    <string name="camera_permission_rationale">Lumen Studio needs camera access to capture your selfie inside the portrait viewfinder. You can also import any photo from your gallery.</string>
+    <string name="camera_grant_permission">Enable Camera</string>
+    <string name="camera_capture_desc">Capture selfie</string>
+    <string name="camera_flip_desc">Switch camera</string>
+    <string name="camera_close_desc">Close camera</string>
+    <string name="saved_to_photos_success">Saved to Photos (Pictures/Lumen Studio)</string>
+</resources>
