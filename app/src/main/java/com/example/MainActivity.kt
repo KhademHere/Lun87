@@ -17,10 +17,10 @@ class MainActivity : ComponentActivity() {
         // STEP 1: Configure Firebase App Check with launch intent before any UI, ViewModels, or Firebase calls
         configureAppCheck(this, intent)
 
-        // STEP 2: Enable dark edge-to-edge darkroom layout
+        // STEP 2: Enable light edge-to-edge system bars matching Pale Lavender canvas
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
         )
 
         // STEP 3: Render Lumen Studio UI

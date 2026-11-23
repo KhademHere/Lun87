@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,12 +39,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cameraswitch
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.PhotoCamera
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,7 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
@@ -70,9 +68,16 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.R
-import com.example.ui.theme.HairlineSteel
-import com.example.ui.theme.ObsidianDarkroom
-import com.example.ui.theme.TungstenAmber
+import com.example.ui.components.PrimaryCtaButton
+import com.example.ui.components.SecondaryActionButton
+import com.example.ui.components.TertiaryActionButton
+import com.example.ui.theme.DeepPlum
+import com.example.ui.theme.DeepPlumDestructive
+import com.example.ui.theme.DustyRoseMuted
+import com.example.ui.theme.MidnightIndigo
+import com.example.ui.theme.OrchidMauve
+import com.example.ui.theme.PaleLavender
+import com.example.ui.theme.StudioSpacing
 import java.io.File
 
 private const val CAMERA_TAG = "StudioCamera"
@@ -111,7 +116,7 @@ fun CameraCaptureScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ObsidianDarkroom)
+            .background(if (hasCameraPermission) MidnightIndigo else PaleLavender)
     ) {
         if (hasCameraPermission) {
             CameraXPortraitViewfinder(
@@ -146,55 +151,85 @@ fun CameraCaptureScreen(
                 onBindError = { msg -> cameraError = msg }
             )
         } else {
-            // Friendly permission rationale with zero-permission gallery fallback
-            Column(
+            // Accessible Pale Lavender permission rationale screen with predictable button hierarchy
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .padding(StudioSpacing.screenEdge),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.PhotoCamera,
-                    contentDescription = null,
-                    tint = TungstenAmber,
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Studio Camera Access",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.camera_permission_rationale),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag("grant_camera_permission_button")
+                        .widthIn(max = 420.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)
                 ) {
-                    Text(stringResource(R.string.camera_grant_permission))
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = {
-                        onClose()
-                        onFallbackToGallery()
-                    },
-                    border = BorderStroke(1.dp, HairlineSteel),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("camera_fallback_gallery_button")
-                ) {
-                    Text(stringResource(R.string.action_choose_selfie))
+                    Box(
+                        modifier = Modifier
+                            .size(68.dp)
+                            .clip(CircleShape)
+                            .background(DustyRoseMuted)
+                            .border(1.5.dp, OrchidMauve, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PhotoCamera,
+                            contentDescription = null,
+                            tint = DeepPlum,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "Studio Camera Access",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MidnightIndigo,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        text = stringResource(R.string.camera_permission_rationale),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DeepPlum,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    PrimaryCtaButton(
+                        onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("grant_camera_permission_button")
+                    ) {
+                        Text(
+                            text = stringResource(R.string.camera_grant_permission),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+
+                    SecondaryActionButton(
+                        onClick = {
+                            onClose()
+                            onFallbackToGallery()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("camera_fallback_gallery_button")
+                    ) {
+                        Text(
+                            text = stringResource(R.string.action_choose_selfie),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+
+                    TertiaryActionButton(onClick = onClose) {
+                        Text("Back to Studio", style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
         }
@@ -269,14 +304,14 @@ private fun CameraXPortraitViewfinder(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Studio Oval Framing & Eye-Line Horizon Guide
+        // Studio Oval Framing & Eye-Line Horizon Guide in Pale Lavender + Orchid Mauve
         Canvas(modifier = Modifier.fillMaxSize()) {
             val ovalW = size.width * 0.68f
             val ovalH = ovalW * 1.32f
             val topLeft = Offset((size.width - ovalW) / 2f, (size.height - ovalH) * 0.42f)
 
             drawOval(
-                color = TungstenAmber.copy(alpha = 0.72f),
+                color = PaleLavender.copy(alpha = 0.85f),
                 topLeft = topLeft,
                 size = Size(ovalW, ovalH),
                 style = Stroke(
@@ -285,19 +320,18 @@ private fun CameraXPortraitViewfinder(
                 )
             )
 
-            // Subtle eye-line ticks
             val eyeY = topLeft.y + ovalH * 0.40f
             drawLine(
-                color = Color.White.copy(alpha = 0.45f),
+                color = OrchidMauve.copy(alpha = 0.9f),
                 start = Offset(topLeft.x - 18.dp.toPx(), eyeY),
                 end = Offset(topLeft.x - 4.dp.toPx(), eyeY),
-                strokeWidth = 1.5.dp.toPx()
+                strokeWidth = 2.dp.toPx()
             )
             drawLine(
-                color = Color.White.copy(alpha = 0.45f),
+                color = OrchidMauve.copy(alpha = 0.9f),
                 start = Offset(topLeft.x + ovalW + 4.dp.toPx(), eyeY),
                 end = Offset(topLeft.x + ovalW + 18.dp.toPx(), eyeY),
-                strokeWidth = 1.5.dp.toPx()
+                strokeWidth = 2.dp.toPx()
             )
         }
 
@@ -312,61 +346,61 @@ private fun CameraXPortraitViewfinder(
         ) {
             Surface(
                 shape = CircleShape,
-                color = ObsidianDarkroom.copy(alpha = 0.7f),
-                border = BorderStroke(1.dp, HairlineSteel)
+                color = MidnightIndigo.copy(alpha = 0.85f),
+                border = BorderStroke(1.dp, OrchidMauve)
             ) {
                 IconButton(
                     onClick = onClose,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(StudioSpacing.touchTarget)
                         .testTag("camera_close_button")
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = stringResource(R.string.camera_close_desc),
-                        tint = Color.White
+                        tint = PaleLavender
                     )
                 }
             }
 
             Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = ObsidianDarkroom.copy(alpha = 0.72f),
-                border = BorderStroke(1.dp, HairlineSteel)
+                shape = RoundedCornerShape(10.dp),
+                color = MidnightIndigo.copy(alpha = 0.88f),
+                border = BorderStroke(1.dp, OrchidMauve)
             ) {
                 Text(
-                    text = "ALIGN FACE IN OVAL · EVEN LIGHT",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TungstenAmber,
+                    text = "Center face in oval · Even light",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = PaleLavender,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
 
             Surface(
                 shape = CircleShape,
-                color = ObsidianDarkroom.copy(alpha = 0.7f),
-                border = BorderStroke(1.dp, HairlineSteel)
+                color = MidnightIndigo.copy(alpha = 0.85f),
+                border = BorderStroke(1.dp, OrchidMauve)
             ) {
                 IconButton(
                     onClick = onFlipCamera,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(StudioSpacing.touchTarget)
                         .testTag("camera_flip_button")
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Cameraswitch,
                         contentDescription = stringResource(R.string.camera_flip_desc),
-                        tint = Color.White
+                        tint = PaleLavender
                     )
                 }
             }
         }
 
-        // Error Banner if camera fails
         if (cameraError != null) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(14.dp),
+                color = DeepPlumDestructive,
+                border = BorderStroke(1.dp, PaleLavender),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(24.dp)
@@ -374,40 +408,47 @@ private fun CameraXPortraitViewfinder(
                 Text(
                     text = cameraError,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    color = PaleLavender,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(16.dp)
                 )
             }
         }
 
-        // Bottom Shutter Controls
+        // Bottom Shutter Tray
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(ObsidianDarkroom.copy(alpha = 0.72f))
+                .background(MidnightIndigo.copy(alpha = 0.88f))
                 .navigationBarsPadding()
                 .padding(vertical = 22.dp),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(76.dp)
+                    .size(78.dp)
                     .clip(CircleShape)
-                    .border(3.dp, TungstenAmber, CircleShape)
+                    .border(3.dp, PaleLavender, CircleShape)
                     .padding(6.dp)
                     .clip(CircleShape)
-                    .background(if (isCapturing) TungstenAmber.copy(alpha = 0.45f) else Color.White)
+                    .background(if (isCapturing) OrchidMauve else DeepPlum)
                     .clickable(enabled = !isCapturing) { onCaptureFile(imageCapture) }
                     .testTag("camera_shutter_button"),
                 contentAlignment = Alignment.Center
             ) {
                 if (isCapturing) {
                     CircularProgressIndicator(
-                        color = ObsidianDarkroom,
+                        color = PaleLavender,
                         strokeWidth = 2.5.dp,
                         modifier = Modifier.size(26.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Rounded.PhotoCamera,
+                        contentDescription = stringResource(R.string.camera_capture_desc),
+                        tint = PaleLavender,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }

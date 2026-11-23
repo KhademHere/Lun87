@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,11 +17,13 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -30,9 +33,11 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,9 +60,11 @@ import com.example.ui.components.SelfieAnalysisSheet
 import com.example.ui.screens.CameraCaptureScreen
 import com.example.ui.screens.LibraryScreen
 import com.example.ui.screens.StudioScreen
-import com.example.ui.theme.FilmTrayCharcoal
-import com.example.ui.theme.ObsidianDarkroom
-import com.example.ui.theme.TungstenAmber
+import com.example.ui.theme.DeepPlum
+import com.example.ui.theme.DustyRoseBorder
+import com.example.ui.theme.MidnightIndigo
+import com.example.ui.theme.PaleLavender
+import com.example.ui.theme.PaleLavenderSoft
 import com.example.ui.viewmodel.HeadshotStudioViewModel
 
 const val ROUTE_STUDIO = "studio"
@@ -132,42 +139,60 @@ fun LumenStudioApp(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ObsidianDarkroom)
+            .background(PaleLavender)
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val useNavigationRail = maxWidth >= 700.dp
 
             Scaffold(
-                containerColor = ObsidianDarkroom,
+                containerColor = PaleLavender,
                 contentWindowInsets = WindowInsets.safeDrawing,
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                snackbarHost = {
+                    SnackbarHost(hostState = snackbarHostState) { data ->
+                        Snackbar(
+                            snackbarData = data,
+                            containerColor = MidnightIndigo,
+                            contentColor = PaleLavender,
+                            actionColor = PaleLavender,
+                            shape = RoundedCornerShape(14.dp)
+                        )
+                    }
+                },
                 bottomBar = {
                     if (!useNavigationRail) {
-                        NavigationBar(
-                            containerColor = FilmTrayCharcoal,
-                            windowInsets = WindowInsets.navigationBars
-                        ) {
-                            navDestinations.forEach { dest ->
-                                val selected = currentRoute == dest.route
-                                NavigationBarItem(
-                                    selected = selected,
-                                    onClick = { navigateTo(dest.route) },
-                                    icon = {
-                                        Icon(
-                                            imageVector = if (selected) dest.selectedIcon else dest.unselectedIcon,
-                                            contentDescription = stringResource(dest.labelRes)
-                                        )
-                                    },
-                                    label = { Text(stringResource(dest.labelRes)) },
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = TungstenAmber,
-                                        selectedTextColor = TungstenAmber,
-                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                    ),
-                                    modifier = Modifier.testTag("nav_${dest.route}")
-                                )
+                        Column {
+                            HorizontalDivider(color = DustyRoseBorder)
+                            NavigationBar(
+                                containerColor = PaleLavenderSoft,
+                                windowInsets = WindowInsets.navigationBars
+                            ) {
+                                navDestinations.forEach { dest ->
+                                    val selected = currentRoute == dest.route
+                                    NavigationBarItem(
+                                        selected = selected,
+                                        onClick = { navigateTo(dest.route) },
+                                        icon = {
+                                            Icon(
+                                                imageVector = if (selected) dest.selectedIcon else dest.unselectedIcon,
+                                                contentDescription = stringResource(dest.labelRes)
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = stringResource(dest.labelRes),
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
+                                        },
+                                        colors = NavigationBarItemDefaults.colors(
+                                            selectedIconColor = PaleLavender,
+                                            selectedTextColor = MidnightIndigo,
+                                            indicatorColor = DeepPlum,
+                                            unselectedIconColor = DeepPlum,
+                                            unselectedTextColor = DeepPlum
+                                        ),
+                                        modifier = Modifier.testTag("nav_${dest.route}")
+                                    )
+                                }
                             }
                         }
                     }
@@ -180,7 +205,7 @@ fun LumenStudioApp(
                 ) {
                     if (useNavigationRail) {
                         NavigationRail(
-                            containerColor = FilmTrayCharcoal,
+                            containerColor = PaleLavenderSoft,
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .statusBarsPadding()
@@ -197,18 +222,24 @@ fun LumenStudioApp(
                                             contentDescription = stringResource(dest.labelRes)
                                         )
                                     },
-                                    label = { Text(stringResource(dest.labelRes)) },
+                                    label = {
+                                        Text(
+                                            text = stringResource(dest.labelRes),
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    },
                                     colors = NavigationRailItemDefaults.colors(
-                                        selectedIconColor = TungstenAmber,
-                                        selectedTextColor = TungstenAmber,
-                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        selectedIconColor = PaleLavender,
+                                        selectedTextColor = MidnightIndigo,
+                                        indicatorColor = DeepPlum,
+                                        unselectedIconColor = DeepPlum,
+                                        unselectedTextColor = DeepPlum
                                     ),
                                     modifier = Modifier.testTag("nav_rail_${dest.route}")
                                 )
                             }
                         }
+                        VerticalDivider(color = DustyRoseBorder)
                     }
 
                     NavHost(

@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -36,17 +38,15 @@ import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,7 +58,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -73,11 +72,21 @@ import com.example.R
 import com.example.data.HeadshotEntity
 import com.example.model.StudioPresets
 import com.example.ui.components.BeforeAfterSlider
-import com.example.ui.theme.FilmTrayCharcoal
-import com.example.ui.theme.HairlineSteel
-import com.example.ui.theme.ObsidianDarkroom
-import com.example.ui.theme.StudioSlate
-import com.example.ui.theme.TungstenAmber
+import com.example.ui.components.DestructiveActionButton
+import com.example.ui.components.PrimaryCtaButton
+import com.example.ui.components.SecondaryActionButton
+import com.example.ui.components.TertiaryActionButton
+import com.example.ui.theme.DeepPlum
+import com.example.ui.theme.DustyRose
+import com.example.ui.theme.DustyRoseBorder
+import com.example.ui.theme.DustyRoseMuted
+import com.example.ui.theme.MidnightIndigo
+import com.example.ui.theme.OrchidMauve
+import com.example.ui.theme.PaleLavender
+import com.example.ui.theme.PaleLavenderElevated
+import com.example.ui.theme.PaleLavenderSoft
+import com.example.ui.theme.StudioSpacing
+import com.example.ui.theme.tabular
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -100,7 +109,6 @@ fun LibraryScreen(
     var inspectedEntity by remember { mutableStateOf<HeadshotEntity?>(null) }
     var deleteCandidate by remember { mutableStateOf<HeadshotEntity?>(null) }
 
-    // Keep inspected item synced with live Room updates (e.g., favorite toggle)
     val liveInspected = inspectedEntity?.let { current ->
         headshots.firstOrNull { it.id == current.id }
     }
@@ -116,30 +124,44 @@ fun LibraryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = StudioSpacing.screenEdge, vertical = 16.dp)
     ) {
+        // Page Header with Tabular Exposure Counter
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "Contact Sheet",
+                    text = "Studio Library",
                     style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MidnightIndigo
                 )
                 Text(
-                    text = "LOCAL STUDIO ARCHIVE · ${headshots.size} EXPOSURES",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TungstenAmber
+                    text = "Local contact sheet & saved portraits",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DeepPlum
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = DustyRoseMuted,
+                border = BorderStroke(1.dp, DustyRoseBorder)
+            ) {
+                Text(
+                    text = "${headshots.size} saved",
+                    style = MaterialTheme.typography.labelMedium.tabular(),
+                    color = MidnightIndigo,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // Filter Chips Row
+        // Accessible 48dp Filter Chips Row
         val filterOptions = remember {
             buildList {
                 add("ALL" to "All")
@@ -149,7 +171,7 @@ fun LibraryScreen(
         }
 
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(StudioSpacing.tight),
             contentPadding = PaddingValues(end = 8.dp)
         ) {
             items(filterOptions, key = { it.first }) { (key, label) ->
@@ -157,25 +179,35 @@ fun LibraryScreen(
                 FilterChip(
                     selected = selected,
                     onClick = { onFilterChange(key) },
-                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                    label = {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    },
+                    shape = RoundedCornerShape(12.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = FilmTrayCharcoal,
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = TungstenAmber,
-                        labelColor = MaterialTheme.colorScheme.secondary
+                        containerColor = PaleLavenderElevated,
+                        selectedContainerColor = DeepPlum,
+                        selectedLabelColor = PaleLavender,
+                        labelColor = MidnightIndigo
                     ),
                     border = FilterChipDefaults.filterChipBorder(
                         enabled = true,
                         selected = selected,
-                        borderColor = HairlineSteel,
-                        selectedBorderColor = TungstenAmber
+                        borderColor = DustyRoseBorder,
+                        selectedBorderColor = DeepPlum,
+                        borderWidth = 1.25.dp,
+                        selectedBorderWidth = 1.5.dp
                     ),
-                    modifier = Modifier.testTag("library_filter_$key")
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = StudioSpacing.touchTarget)
+                        .testTag("library_filter_$key")
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         if (filteredList.isEmpty()) {
             Box(
@@ -184,58 +216,70 @@ fun LibraryScreen(
                     .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Surface(
+                    shape = RoundedCornerShape(22.dp),
+                    color = PaleLavenderElevated,
+                    border = BorderStroke(1.25.dp, DustyRoseBorder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 420.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(StudioSlate)
-                            .border(1.dp, HairlineSteel, CircleShape),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        modifier = Modifier.padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.PhotoLibrary,
-                            contentDescription = null,
-                            tint = TungstenAmber,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    Text(
-                        text = if (headshots.isEmpty()) {
-                            stringResource(R.string.empty_library_title)
-                        } else {
-                            "No headshots match this filter"
-                        },
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = stringResource(R.string.empty_library_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                    if (headshots.isEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Button(
-                            onClick = onNavigateToStudio,
-                            modifier = Modifier.testTag("empty_library_go_studio_button")
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(DustyRoseMuted)
+                                .border(1.5.dp, OrchidMauve, CircleShape),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text("Open Darkroom Studio")
+                            Icon(
+                                imageVector = Icons.Outlined.PhotoLibrary,
+                                contentDescription = null,
+                                tint = DeepPlum,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Text(
+                            text = if (headshots.isEmpty()) {
+                                stringResource(R.string.empty_library_title)
+                            } else {
+                                "No headshots match this filter"
+                            },
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MidnightIndigo,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = stringResource(R.string.empty_library_body),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DeepPlum,
+                            textAlign = TextAlign.Center
+                        )
+                        if (headshots.isEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            PrimaryCtaButton(
+                                onClick = onNavigateToStudio,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("empty_library_go_studio_button")
+                            ) {
+                                Text("Open Studio", style = MaterialTheme.typography.labelLarge)
+                            }
                         }
                     }
                 }
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 158.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp),
+                columns = GridCells.Adaptive(minSize = 164.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(bottom = 28.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredList, key = { it.id }) { item ->
@@ -269,30 +313,45 @@ fun LibraryScreen(
         val candidate = deleteCandidate!!
         AlertDialog(
             onDismissRequest = { deleteCandidate = null },
-            containerColor = FilmTrayCharcoal,
-            title = { Text("Delete Headshot?", style = MaterialTheme.typography.headlineSmall) },
-            text = {
+            containerColor = PaleLavenderSoft,
+            titleContentColor = MidnightIndigo,
+            textContentColor = MidnightIndigo,
+            title = {
                 Text(
-                    "Remove this ${candidate.styleName} exposure from your local Studio Library? Photos already exported to your device gallery will remain untouched.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Delete Headshot?",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MidnightIndigo
                 )
             },
+            text = {
+                Text(
+                    text = "Remove this ${candidate.styleName} exposure from your local Studio Library? Photos already saved to your device gallery will remain untouched.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DeepPlum
+                )
+            },
+            dismissButton = {
+                TertiaryActionButton(onClick = { deleteCandidate = null }) {
+                    Text("Cancel", style = MaterialTheme.typography.labelLarge)
+                }
+            },
             confirmButton = {
-                TextButton(
+                DestructiveActionButton(
                     onClick = {
                         deleteCandidate = null
                         if (inspectedEntity?.id == candidate.id) inspectedEntity = null
                         onDelete(candidate)
                     },
+                    filled = true,
                     modifier = Modifier.testTag("confirm_delete_headshot_button")
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { deleteCandidate = null }) {
-                    Text("Cancel")
+                    Icon(
+                        imageVector = Icons.Outlined.DeleteOutline,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("Delete", style = MaterialTheme.typography.labelLarge)
                 }
             }
         )
@@ -309,9 +368,9 @@ private fun ContactSheetCard(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.76f)
-            .clip(RoundedCornerShape(16.dp))
-            .background(FilmTrayCharcoal)
-            .border(1.dp, HairlineSteel, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(MidnightIndigo)
+            .border(1.25.dp, DustyRoseBorder, RoundedCornerShape(18.dp))
             .clickable(onClick = onClick)
             .testTag("library_card_${entity.id}")
     ) {
@@ -322,61 +381,73 @@ private fun ContactSheetCard(
             modifier = Modifier.fillMaxSize()
         )
 
+        // High-contrast Midnight Indigo gradient scrim for AAA Pale Lavender metadata readability
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.25f),
-                            Color.Transparent,
-                            ObsidianDarkroom.copy(alpha = 0.90f)
+                            MidnightIndigo.copy(alpha = 0.28f),
+                            MidnightIndigo.copy(alpha = 0.04f),
+                            MidnightIndigo.copy(alpha = 0.90f)
                         )
                     )
                 )
         )
 
-        // Top-left ratio & resolution HUD pill
+        // Top-left tabular spec badge
         Surface(
-            color = ObsidianDarkroom.copy(alpha = 0.72f),
-            shape = RoundedCornerShape(6.dp),
+            color = MidnightIndigo.copy(alpha = 0.86f),
+            shape = RoundedCornerShape(8.dp),
+            border = BorderStroke(1.dp, OrchidMauve.copy(alpha = 0.65f)),
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(8.dp)
+                .padding(10.dp)
         ) {
             Text(
                 text = "${entity.aspectRatioLabel} · ${entity.resolutionLabel}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                style = MaterialTheme.typography.labelSmall.tabular(),
+                color = PaleLavender,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
 
-        // Top-right favorite toggle (48dp touch area)
+        // Top-right accessible 48dp favorite icon button
         IconButton(
             onClick = onToggleFavorite,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(48.dp)
+                .size(StudioSpacing.touchTarget)
                 .testTag("library_fav_${entity.id}")
         ) {
-            Icon(
-                imageVector = if (entity.isFavorite) Icons.Rounded.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription = if (entity.isFavorite) "Remove favorite" else "Favorite headshot",
-                tint = if (entity.isFavorite) TungstenAmber else Color.White.copy(alpha = 0.85f),
-                modifier = Modifier.size(20.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(if (entity.isFavorite) DeepPlum else MidnightIndigo.copy(alpha = 0.72f))
+                    .border(1.dp, PaleLavender.copy(alpha = 0.65f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (entity.isFavorite) Icons.Rounded.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (entity.isFavorite) "Remove from favorites" else "Save to favorites",
+                    tint = PaleLavender,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
 
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(10.dp)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
                 text = entity.styleName,
                 style = MaterialTheme.typography.titleSmall,
-                color = Color.White,
+                color = PaleLavender,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -385,8 +456,8 @@ private fun ContactSheetCard(
             }
             Text(
                 text = dateStr,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelSmall.tabular(),
+                color = DustyRose
             )
         }
     }
@@ -422,14 +493,14 @@ private fun HeadshotInspectorDialog(
                 .fillMaxSize()
                 .padding(14.dp),
             shape = RoundedCornerShape(24.dp),
-            color = FilmTrayCharcoal,
-            border = BorderStroke(1.dp, HairlineSteel)
+            color = PaleLavenderSoft,
+            border = BorderStroke(1.5.dp, DustyRoseBorder)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(StudioSpacing.cardPadding),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 // Header
                 Row(
@@ -437,58 +508,64 @@ private fun HeadshotInspectorDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
                         Text(
                             text = entity.styleName,
                             style = MaterialTheme.typography.titleLarge,
+                            color = MidnightIndigo,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "${entity.modelTierId.uppercase()} · ${entity.aspectRatioLabel} · ${entity.resolutionLabel}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TungstenAmber
+                            style = MaterialTheme.typography.labelMedium.tabular(),
+                            color = DeepPlum
                         )
                     }
 
-                    Row {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         IconButton(
                             onClick = onToggleFavorite,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(StudioSpacing.touchTarget)
                         ) {
                             Icon(
                                 imageVector = if (entity.isFavorite) Icons.Rounded.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Toggle favorite",
-                                tint = if (entity.isFavorite) TungstenAmber else MaterialTheme.colorScheme.onSurface
+                                contentDescription = if (entity.isFavorite) "Remove favorite" else "Mark favorite",
+                                tint = DeepPlum
                             )
                         }
                         IconButton(
                             onClick = onDismiss,
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(StudioSpacing.touchTarget)
                                 .testTag("close_inspector_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Close,
-                                contentDescription = "Close inspector"
+                                contentDescription = "Close inspector",
+                                tint = MidnightIndigo
                             )
                         }
                     }
                 }
 
-                // Image / Compare Viewport
+                // Midnight Indigo Photo Mat Viewport
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(ObsidianDarkroom),
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MidnightIndigo)
+                        .border(1.dp, OrchidMauve.copy(alpha = 0.5f), RoundedCornerShape(18.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     val after = generatedBitmap
                     val before = sourceBitmap
                     when {
-                        after == null -> CircularProgressIndicator(color = TungstenAmber)
+                        after == null -> CircularProgressIndicator(color = PaleLavender)
                         isComparing && before != null -> {
                             BeforeAfterSlider(
                                 beforeBitmap = before,
@@ -511,79 +588,97 @@ private fun HeadshotInspectorDialog(
                 }
 
                 if (!entity.retouchPrompt.isNullOrBlank()) {
-                    Text(
-                        text = "Direction: ${entity.retouchPrompt}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PaleLavenderElevated,
+                        border = BorderStroke(1.dp, DustyRoseBorder),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Direction: ${entity.retouchPrompt}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MidnightIndigo,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                        )
+                    }
                 }
 
-                // Controls Row
+                // Secondary Actions Row: Compare & Retouch
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)
                 ) {
                     if (sourceBitmap != null) {
-                        FilledTonalButton(
+                        SecondaryActionButton(
                             onClick = { isComparing = !isComparing },
+                            selected = isComparing,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("inspector_compare_button")
                         ) {
                             Icon(Icons.Outlined.Compare, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(if (isComparing) "Final" else "Compare")
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (isComparing) "Show Final" else "Compare", style = MaterialTheme.typography.labelLarge)
                         }
                     }
 
-                    FilledTonalButton(
+                    SecondaryActionButton(
                         onClick = { onOpenInStudio(true) },
                         modifier = Modifier
                             .weight(1f)
                             .testTag("inspector_retouch_button")
                     ) {
                         Icon(Icons.Outlined.AutoFixHigh, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Retouch")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Retouch", style = MaterialTheme.typography.labelLarge)
                     }
                 }
 
+                HorizontalDivider(color = DustyRose)
+
+                // Safe Separation: Destructive Delete (left, distinct) vs Primary Save to Photos (right)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
+                    DestructiveActionButton(
+                        onClick = onRequestDelete,
+                        filled = false,
+                        modifier = Modifier.testTag("inspector_delete_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = "Delete headshot",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Delete", style = MaterialTheme.typography.labelLarge)
+                    }
+
+                    PrimaryCtaButton(
                         onClick = onSaveToPhotos,
                         enabled = !isExporting,
                         modifier = Modifier
                             .weight(1f)
                             .testTag("inspector_save_photos_button")
                     ) {
-                        Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.action_save_to_photos))
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = StudioSlate,
-                        border = BorderStroke(1.dp, HairlineSteel)
-                    ) {
-                        IconButton(
-                            onClick = onRequestDelete,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .testTag("inspector_delete_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.DeleteOutline,
-                                contentDescription = "Delete headshot",
-                                tint = MaterialTheme.colorScheme.error
+                        if (isExporting) {
+                            CircularProgressIndicator(
+                                color = PaleLavender,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(18.dp)
                             )
+                        } else {
+                            Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                         }
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.action_save_to_photos),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }

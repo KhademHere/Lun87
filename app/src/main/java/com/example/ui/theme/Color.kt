@@ -2,33 +2,23 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Darkroom Pro Studio palette
-val ObsidianDarkroom = Color(0xFF0C0D10)
-val FilmTrayCharcoal = Color(0xFF14161B)
-val StudioSlate = Color(0xFF1C1F26)
-val LoupePanel = Color(0xFF262A34)
-val ElevatedGraphite = Color(0xFF303542)
+// =============================================================================
+// Mandatory Five-Color Brand Palette
+// =============================================================================
+val PaleLavender = Color(0xFFF2D7EE)      // Primary light canvas, elevated surfaces, light ink on dark
+val DustyRose = Color(0xFFD3BCC0)         // Secondary neutral fills, dividers, inactive tracks, hairlines
+val OrchidMauve = Color(0xFFA5668B)       // Secondary accents, focus indicators, badges, active icons
+val DeepPlum = Color(0xFF69306D)          // Primary CTA fill, active nav indicators, strong visual anchors
+val MidnightIndigo = Color(0xFF0E103D)    // High-contrast ink for headings, body text, strong icons & dark mat
 
-val TungstenAmber = Color(0xFFE8A849)
-val TungstenAmberSoft = Color(0xFFF3C677)
-val DeepInk = Color(0xFF181207)
-val TungstenContainer = Color(0xFF3D2C12)
-val OnTungstenContainer = Color(0xFFFCE3B6)
-
-val SilverHalide = Color(0xFFC7D0DC)
-val SilverInk = Color(0xFF141A22)
-val SilverContainer = Color(0xFF252D38)
-
-val WarmCopper = Color(0xFFC9784F)
-val CopperInk = Color(0xFF241106)
-val CopperContainer = Color(0xFF3B2216)
-
-val WarmPaperWhite = Color(0xFFF4F1EA)
-val MutedGraphite = Color(0xFF9A9FA8)
-val HairlineSteel = Color(0xFF2D323E)
-val SubtleOutline = Color(0xFF424857)
-
-val SafelightCrimson = Color(0xFFEF6B6B)
-val CrimsonInk = Color(0xFF360B0B)
-val CrimsonContainer = Color(0xFF4A1818)
-val EmeraldReady = Color(0xFF5EC492)
+// =============================================================================
+// Subtle Tint / Shade Derivatives (Strictly derived for elevation, borders & states)
+// =============================================================================
+val PaleLavenderElevated = Color(0xFFFAF0F8)   // Lifted card surface on Pale Lavender canvas (16.3:1 with MidnightIndigo)
+val PaleLavenderSoft = Color(0xFFF6E4F3)       // Modal sheet & navigation bar fill
+val DustyRoseMuted = Color(0xFFE4D2D8)         // Soft container tint for inputs & secondary chips
+val DustyRoseBorder = Color(0xFFC2A8AE)        // Crisp hairline border derivative of Dusty Rose
+val DeepPlumPressed = Color(0xFF532456)        // Pressed/active derivative of Deep Plum
+val DeepPlumDestructive = Color(0xFF4B194E)    // Distinct deep-shade anchor for destructive confirmation actions
+val MidnightIndigoElevated = Color(0xFF1A1D52) // Elevated surface inside dark photographic viewfinders
+val OrchidMauveTint = Color(0x26A5668B)        // 15% Orchid Mauve tint for subtle active badges/halos

@@ -1,6 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -27,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,14 +41,10 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -69,11 +65,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.AsyncOpState
-import com.example.ui.theme.FilmTrayCharcoal
-import com.example.ui.theme.HairlineSteel
-import com.example.ui.theme.ObsidianDarkroom
-import com.example.ui.theme.StudioSlate
-import com.example.ui.theme.TungstenAmber
+import com.example.ui.theme.DeepPlum
+import com.example.ui.theme.DustyRose
+import com.example.ui.theme.DustyRoseBorder
+import com.example.ui.theme.DustyRoseMuted
+import com.example.ui.theme.MidnightIndigo
+import com.example.ui.theme.MidnightIndigoElevated
+import com.example.ui.theme.OrchidMauve
+import com.example.ui.theme.PaleLavender
+import com.example.ui.theme.PaleLavenderElevated
+import com.example.ui.theme.StudioSpacing
 import com.example.ui.viewmodel.StudioUiState
 
 @Composable
@@ -94,27 +95,28 @@ fun DarkroomViewport(
     val isBusy = state.generationState is AsyncOpState.Loading || state.retouchState is AsyncOpState.Loading
     val activeError = (state.generationState as? AsyncOpState.Error)?.message
         ?: (state.retouchState as? AsyncOpState.Error)?.message
+    val hasPhoto = state.sourceSelfie != null || state.developedHeadshot != null
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Main Portrait Frame Stage
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)
+    ) {
+        // Portrait Stage Frame — Pale Lavender Elevated when welcoming, Midnight Indigo gallery mat when framing a photo
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(
-                    ratio = state.selectedAspectRatio.ratioValue.coerceIn(0.68f, 1.65f)
+                    ratio = state.selectedAspectRatio.ratioValue.coerceIn(0.72f, 1.55f)
                 )
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(22.dp))
                 .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            TungstenAmber.copy(alpha = 0.08f),
-                            FilmTrayCharcoal,
-                            ObsidianDarkroom
-                        ),
-                        radius = 750f
-                    )
+                    if (hasPhoto) MidnightIndigo else PaleLavenderElevated
                 )
-                .border(1.dp, HairlineSteel, RoundedCornerShape(20.dp)),
+                .border(
+                    width = 1.5.dp,
+                    color = if (hasPhoto) OrchidMauve.copy(alpha = 0.55f) else DustyRoseBorder,
+                    shape = RoundedCornerShape(22.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -146,11 +148,10 @@ fun DarkroomViewport(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
-                    // Subtle top HUD badge showing selfie loaded
                     Surface(
-                        color = ObsidianDarkroom.copy(alpha = 0.78f),
+                        color = MidnightIndigo.copy(alpha = 0.88f),
                         shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, HairlineSteel),
+                        border = BorderStroke(1.dp, OrchidMauve),
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .padding(12.dp)
@@ -158,37 +159,37 @@ fun DarkroomViewport(
                         Text(
                             text = "SOURCE SELFIE · READY",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary,
+                            color = PaleLavender,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                         )
                     }
                 }
 
                 else -> {
-                    ZeroStateViewfinder(
+                    ZeroStateWelcomeStage(
                         onPickSelfie = onPickSelfie,
                         onTakeSelfie = onTakeSelfie
                     )
                 }
             }
 
-            // Viewfinder Precision Corner Reticle (shown when empty or source preview only)
+            // Precision viewfinder corner marks on empty or source state
             if (state.developedHeadshot == null) {
                 ViewfinderCornerMarks(
-                    color = TungstenAmber.copy(alpha = if (state.sourceSelfie == null) 0.45f else 0.75f),
+                    color = if (hasPhoto) PaleLavender.copy(alpha = 0.72f) else OrchidMauve.copy(alpha = 0.65f),
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(14.dp)
+                        .padding(16.dp)
                 )
             }
 
-            // Favorite Floating Icon on Developed Portrait
+            // Accessible Favorite Toggle on Developed Portrait
             if (state.developedHeadshot != null && state.activeRecord != null && !isBusy) {
                 val isFav = state.activeRecord.isFavorite
                 Surface(
                     shape = CircleShape,
-                    color = ObsidianDarkroom.copy(alpha = 0.75f),
-                    border = BorderStroke(1.dp, HairlineSteel),
+                    color = if (isFav) DeepPlum else MidnightIndigo.copy(alpha = 0.85f),
+                    border = BorderStroke(1.5.dp, PaleLavender.copy(alpha = 0.75f)),
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(12.dp)
@@ -196,39 +197,39 @@ fun DarkroomViewport(
                     IconButton(
                         onClick = onToggleFavorite,
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(StudioSpacing.touchTarget)
                             .testTag("favorite_active_button")
                     ) {
                         Icon(
                             imageVector = if (isFav) Icons.Rounded.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = if (isFav) "Remove from favorites" else "Mark as favorite",
-                            tint = if (isFav) TungstenAmber else MaterialTheme.colorScheme.onSurface
+                            contentDescription = if (isFav) "Remove headshot from favorites" else "Save headshot to favorites",
+                            tint = PaleLavender
                         )
                     }
                 }
             }
 
-            // Darkroom Developing Shimmer Overlay
+            // Developing Progress Veil (high-contrast Midnight Indigo + Pale Lavender)
             androidx.compose.animation.AnimatedVisibility(
                 visible = isBusy,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                DarkroomDevelopingOverlay(
+                StudioDevelopingOverlay(
                     isRetouch = state.retouchState is AsyncOpState.Loading,
-                    specLine = "${state.selectedModelTier.hudBadge} · ${state.selectedAspectRatio.label} · ${state.selectedResolution.label}",
+                    specLine = "${state.selectedModelTier.label} · ${state.selectedAspectRatio.label} · ${state.selectedResolution.label}",
                     onCancel = onCancelGeneration
                 )
             }
 
-            // Transparent Error Overlay
+            // Transparent Error State with Icon + Retry
             androidx.compose.animation.AnimatedVisibility(
                 visible = !isBusy && activeError != null,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
                 if (activeError != null) {
-                    DarkroomErrorOverlay(
+                    StudioErrorOverlay(
                         message = activeError,
                         onRetry = onRetryGeneration
                     )
@@ -236,23 +237,19 @@ fun DarkroomViewport(
             }
         }
 
-        // Action Bar below Viewport when a selfie is loaded
+        // Ergonomic Action Toolbars beneath viewport once a selfie is loaded
         if (state.sourceSelfie != null) {
-            Spacer(modifier = Modifier.height(12.dp))
             if (state.developedHeadshot != null) {
-                // Result Action Strip: Compare · Retouch · Save to Photos
+                // Result Controls: Compare · Retouch · Save to Photos
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(StudioSpacing.tight)
                 ) {
-                    FilledTonalButton(
+                    SecondaryActionButton(
                         onClick = onToggleCompare,
                         enabled = !isBusy,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = if (state.isComparing) MaterialTheme.colorScheme.primaryContainer else StudioSlate,
-                            contentColor = if (state.isComparing) TungstenAmber else MaterialTheme.colorScheme.onSurface
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                        selected = state.isComparing,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 12.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("compare_toggle_button")
@@ -264,19 +261,15 @@ fun DarkroomViewport(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = stringResource(R.string.action_compare),
+                            text = if (state.isComparing) "Comparing" else stringResource(R.string.action_compare),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
 
-                    FilledTonalButton(
+                    SecondaryActionButton(
                         onClick = onOpenRetouch,
                         enabled = !isBusy,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = StudioSlate,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 12.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("retouch_open_button")
@@ -293,14 +286,10 @@ fun DarkroomViewport(
                         )
                     }
 
-                    FilledTonalButton(
+                    SecondaryActionButton(
                         onClick = onSaveToPhotos,
                         enabled = !isBusy && !state.isExporting,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = StudioSlate,
-                            contentColor = TungstenAmber
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 12.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("save_to_photos_button")
@@ -309,7 +298,7 @@ fun DarkroomViewport(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
                                 strokeWidth = 2.dp,
-                                color = TungstenAmber
+                                color = DeepPlum
                             )
                         } else {
                             Icon(
@@ -325,20 +314,17 @@ fun DarkroomViewport(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Source Utility Strip: Analyze Selfie + Replace Photo / Camera
+            // Source Utility Bar: Analyze Selfie + Replace Photo / Retake Camera
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedButton(
+                SecondaryActionButton(
                     onClick = onAnalyzeSelfie,
                     enabled = !isBusy,
-                    border = BorderStroke(1.dp, TungstenAmber.copy(alpha = 0.55f)),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                     modifier = Modifier
                         .weight(1f)
                         .testTag("analyze_selfie_button")
@@ -346,47 +332,52 @@ fun DarkroomViewport(
                     Icon(
                         imageVector = Icons.Rounded.AutoAwesome,
                         contentDescription = null,
-                        tint = TungstenAmber,
+                        tint = DeepPlum,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.action_analyze_selfie),
-                        color = TungstenAmber,
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = StudioSlate,
-                    border = BorderStroke(1.dp, HairlineSteel)
+                    shape = RoundedCornerShape(14.dp),
+                    color = PaleLavenderElevated,
+                    border = BorderStroke(1.25.dp, DustyRoseBorder)
                 ) {
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = onPickSelfie,
                             enabled = !isBusy,
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(StudioSpacing.touchTarget)
                                 .testTag("replace_gallery_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.PhotoLibrary,
-                                contentDescription = "Choose another selfie from Photos",
-                                tint = MaterialTheme.colorScheme.secondary
+                                contentDescription = "Choose a different selfie from Photos",
+                                tint = MidnightIndigo
                             )
                         }
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(24.dp)
+                                .background(DustyRoseBorder)
+                        )
                         IconButton(
                             onClick = onTakeSelfie,
                             enabled = !isBusy,
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(StudioSpacing.touchTarget)
                                 .testTag("replace_camera_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.CameraAlt,
-                                contentDescription = "Capture a new selfie with camera",
-                                tint = MaterialTheme.colorScheme.secondary
+                                contentDescription = "Take a new selfie with camera",
+                                tint = MidnightIndigo
                             )
                         }
                     }
@@ -397,7 +388,7 @@ fun DarkroomViewport(
 }
 
 @Composable
-private fun ZeroStateViewfinder(
+private fun ZeroStateWelcomeStage(
     onPickSelfie: () -> Unit,
     onTakeSelfie: () -> Unit
 ) {
@@ -410,45 +401,47 @@ private fun ZeroStateViewfinder(
     ) {
         Box(
             modifier = Modifier
-                .size(68.dp)
+                .size(64.dp)
                 .clip(CircleShape)
-                .background(TungstenAmber.copy(alpha = 0.12f))
-                .border(1.dp, TungstenAmber.copy(alpha = 0.45f), CircleShape),
+                .background(DustyRoseMuted)
+                .border(1.5.dp, OrchidMauve, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Outlined.CameraAlt,
                 contentDescription = null,
-                tint = TungstenAmber,
-                modifier = Modifier.size(30.dp)
+                tint = DeepPlum,
+                modifier = Modifier.size(28.dp)
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Step into the darkroom",
+            text = "Start with a casual selfie",
             style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MidnightIndigo,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Upload a casual selfie or snap one in-app to develop studio-lit professional headshots up to 4K.",
+            text = "Pick a photo from your library or capture one now to develop studio-lit headshots up to 4K.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            color = DeepPlum,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 360.dp)
         )
 
         Spacer(modifier = Modifier.height(22.dp))
 
+        // Clear Button Hierarchy: One Primary CTA (#69306D) + One Secondary Action
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
+            PrimaryCtaButton(
                 onClick = onPickSelfie,
                 contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
                 modifier = Modifier.testTag("choose_selfie_button")
@@ -459,25 +452,27 @@ private fun ZeroStateViewfinder(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.action_choose_selfie))
+                Text(
+                    text = stringResource(R.string.action_choose_selfie),
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
 
-            OutlinedButton(
+            SecondaryActionButton(
                 onClick = onTakeSelfie,
-                border = BorderStroke(1.dp, TungstenAmber.copy(alpha = 0.6f)),
                 contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
                 modifier = Modifier.testTag("take_selfie_button")
             ) {
                 Icon(
                     imageVector = Icons.Outlined.CameraAlt,
                     contentDescription = null,
-                    tint = TungstenAmber,
+                    tint = DeepPlum,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.action_take_selfie),
-                    color = TungstenAmber
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }
@@ -491,32 +486,31 @@ private fun ViewfinderCornerMarks(
 ) {
     Canvas(modifier = modifier) {
         val len = 18.dp.toPx()
-        val stroke = 1.6.dp.toPx()
+        val stroke = 2.dp.toPx()
         val w = size.width
         val h = size.height
 
-        // Top-left
         drawLine(color, Offset(0f, 0f), Offset(len, 0f), stroke)
         drawLine(color, Offset(0f, 0f), Offset(0f, len), stroke)
-        // Top-right
+
         drawLine(color, Offset(w, 0f), Offset(w - len, 0f), stroke)
         drawLine(color, Offset(w, 0f), Offset(w, len), stroke)
-        // Bottom-left
+
         drawLine(color, Offset(0f, h), Offset(len, h), stroke)
         drawLine(color, Offset(0f, h), Offset(0f, h - len), stroke)
-        // Bottom-right
+
         drawLine(color, Offset(w, h), Offset(w - len, h), stroke)
         drawLine(color, Offset(w, h), Offset(w, h - len), stroke)
     }
 }
 
 @Composable
-private fun DarkroomDevelopingOverlay(
+private fun StudioDevelopingOverlay(
     isRetouch: Boolean,
     specLine: String,
     onCancel: () -> Unit
 ) {
-    val infinite = rememberInfiniteTransition(label = "darkroom_sweep")
+    val infinite = rememberInfiniteTransition(label = "studio_sweep")
     val sweep by infinite.animateFloat(
         initialValue = -0.3f,
         targetValue = 1.3f,
@@ -530,7 +524,7 @@ private fun DarkroomDevelopingOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ObsidianDarkroom.copy(alpha = 0.84f)),
+            .background(MidnightIndigo.copy(alpha = 0.90f)),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -539,7 +533,7 @@ private fun DarkroomDevelopingOverlay(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         Color.Transparent,
-                        TungstenAmber.copy(alpha = 0.16f),
+                        OrchidMauve.copy(alpha = 0.25f),
                         Color.Transparent
                     ),
                     startY = y - 140f,
@@ -549,36 +543,44 @@ private fun DarkroomDevelopingOverlay(
         }
 
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier
+                .padding(24.dp)
+                .widthIn(max = 360.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircularProgressIndicator(
-                color = TungstenAmber,
-                trackColor = HairlineSteel,
+                color = PaleLavender,
+                trackColor = MidnightIndigoElevated,
                 strokeWidth = 3.dp,
                 modifier = Modifier.size(44.dp)
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
             Text(
                 text = stringResource(if (isRetouch) R.string.label_retouching else R.string.label_developing),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge,
+                color = PaleLavender,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = specLine,
-                style = MaterialTheme.typography.labelMedium,
-                color = TungstenAmber
-            )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = DeepPlum
+            ) {
+                Text(
+                    text = specLine,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = PaleLavender,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = stringResource(R.string.label_developing_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = DustyRose,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             TextButton(
                 onClick = onCancel,
                 modifier = Modifier.testTag("cancel_generation_button")
@@ -586,49 +588,66 @@ private fun DarkroomDevelopingOverlay(
                 Icon(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = null,
+                    tint = PaleLavender,
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(Modifier.width(4.dp))
-                Text("Cancel")
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "Cancel",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = PaleLavender
+                )
             }
         }
     }
 }
 
 @Composable
-private fun DarkroomErrorOverlay(
+private fun StudioErrorOverlay(
     message: String,
     onRetry: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ObsidianDarkroom.copy(alpha = 0.88f))
+            .background(MidnightIndigo.copy(alpha = 0.92f))
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = Icons.Rounded.ErrorOutline,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(38.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+        Column(
+            modifier = Modifier.widthIn(max = 360.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(DeepPlum),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ErrorOutline,
+                    contentDescription = null,
+                    tint = PaleLavender,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(14.dp))
             Text(
                 text = "Studio Exposure Interrupted",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleLarge,
+                color = PaleLavender,
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = DustyRose,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
+            Spacer(modifier = Modifier.height(20.dp))
+            PrimaryCtaButton(
                 onClick = onRetry,
                 modifier = Modifier.testTag("retry_generation_button")
             ) {
@@ -637,8 +656,8 @@ private fun DarkroomErrorOverlay(
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
-                Spacer(Modifier.width(6.dp))
-                Text("Retry Exposure")
+                Spacer(Modifier.width(8.dp))
+                Text("Retry Exposure", style = MaterialTheme.typography.labelLarge)
             }
         }
     }

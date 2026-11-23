@@ -1,8 +1,14 @@
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,16 +34,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.FlashOn
 import androidx.compose.material.icons.rounded.HighQuality
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +57,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.model.HeadshotAspectRatio
@@ -52,11 +67,16 @@ import com.example.model.HeadshotResolution
 import com.example.model.HeadshotStylePreset
 import com.example.model.StudioModelTier
 import com.example.model.StudioPresets
-import com.example.ui.theme.FilmTrayCharcoal
-import com.example.ui.theme.HairlineSteel
-import com.example.ui.theme.ObsidianDarkroom
-import com.example.ui.theme.StudioSlate
-import com.example.ui.theme.TungstenAmber
+import com.example.ui.theme.DeepPlum
+import com.example.ui.theme.DustyRose
+import com.example.ui.theme.DustyRoseBorder
+import com.example.ui.theme.DustyRoseMuted
+import com.example.ui.theme.MidnightIndigo
+import com.example.ui.theme.MidnightIndigoElevated
+import com.example.ui.theme.OrchidMauve
+import com.example.ui.theme.PaleLavender
+import com.example.ui.theme.PaleLavenderElevated
+import com.example.ui.theme.StudioSpacing
 
 @Composable
 fun StylePresetCarousel(
@@ -64,28 +84,18 @@ fun StylePresetCarousel(
     onSelectPreset: (HeadshotStylePreset) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "BACKDROP & LIGHTING",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = selectedPreset.lensSpec,
-                style = MaterialTheme.typography.labelSmall,
-                color = TungstenAmber
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)
+    ) {
+        SectionHeader(
+            title = "1. Choose Backdrop & Style",
+            subtitle = selectedPreset.wardrobeCue,
+            badgeText = selectedPreset.lensSpec
+        )
 
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap),
             contentPadding = PaddingValues(end = 4.dp)
         ) {
             items(StudioPresets.all, key = { it.id }) { preset ->
@@ -106,23 +116,26 @@ private fun StylePresetCard(
     onClick: () -> Unit
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (selected) TungstenAmber else HairlineSteel,
+        targetValue = if (selected) DeepPlum else DustyRoseBorder,
         animationSpec = spring(),
         label = "preset_border_color"
     )
     val borderWidth by animateDpAsState(
-        targetValue = if (selected) 2.dp else 1.dp,
+        targetValue = if (selected) 2.5.dp else 1.dp,
         animationSpec = spring(),
         label = "preset_border_width"
     )
+    val cardShape = RoundedCornerShape(16.dp)
 
     Box(
         modifier = Modifier
-            .width(146.dp)
-            .height(112.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .border(borderWidth, borderColor, RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
+            .width(156.dp)
+            .height(120.dp)
+            .clip(cardShape)
+            .border(borderWidth, borderColor, cardShape)
+            .brandFocusRing(cardShape)
+            .semantics { this.selected = selected }
+            .clickable(role = Role.RadioButton, onClick = onClick)
             .testTag("style_preset_${preset.id}")
     ) {
         if (preset.thumbnailRes != null) {
@@ -133,49 +146,60 @@ private fun StylePresetCard(
                 modifier = Modifier.fillMaxSize()
             )
         } else {
+            val isWarm = preset.id == "executive_warm"
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(
-                                Color(preset.fallbackGradientHexStart),
-                                Color(preset.fallbackGradientHexEnd)
-                            )
+                            colors = if (isWarm) {
+                                listOf(DeepPlum, MidnightIndigo)
+                            } else {
+                                listOf(OrchidMauve, MidnightIndigoElevated)
+                            }
                         )
                     )
             )
         }
 
-        // Scrim for legible studio caption
+        // High-contrast Midnight Indigo caption scrim guaranteeing AAA Pale Lavender legibility
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.12f),
-                            ObsidianDarkroom.copy(alpha = 0.88f)
+                            MidnightIndigo.copy(alpha = 0.14f),
+                            MidnightIndigo.copy(alpha = 0.52f),
+                            MidnightIndigo.copy(alpha = 0.92f)
                         )
                     )
                 )
         )
 
+        // Active selection indicator pill (never color-only: icon + "Active" state)
         if (selected) {
-            Box(
+            Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
-                    .size(22.dp)
-                    .clip(CircleShape)
-                    .background(TungstenAmber),
-                contentAlignment = Alignment.Center
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(DeepPlum)
+                    .border(1.dp, PaleLavender, RoundedCornerShape(20.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
-                    contentDescription = "Selected",
-                    tint = ObsidianDarkroom,
-                    modifier = Modifier.size(14.dp)
+                    contentDescription = "Selected style",
+                    tint = PaleLavender,
+                    modifier = Modifier.size(13.dp)
+                )
+                Text(
+                    text = "Active",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = PaleLavender
                 )
             }
         }
@@ -183,20 +207,20 @@ private fun StylePresetCard(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(10.dp)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
                 text = preset.lightingSpec,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (selected) TungstenAmber else MaterialTheme.colorScheme.secondary,
+                color = DustyRose,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = preset.shortTitle,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = PaleLavender,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -216,206 +240,306 @@ fun CameraHudControlsPanel(
     onCustomNotesChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    var showCustomNotes by rememberSaveable { mutableStateOf(customNotes.isNotBlank()) }
+
+    Column(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = FilmTrayCharcoal,
-        border = BorderStroke(1.dp, HairlineSteel)
+        verticalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+        SectionHeader(
+            title = "2. Quality, Ratio & Framing",
+            subtitle = "${selectedTier.subtitle} · ${selectedAspectRatio.hint}",
+            badgeText = "${selectedResolution.label} · ${selectedAspectRatio.label}"
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            color = PaleLavenderElevated,
+            border = BorderStroke(1.25.dp, DustyRoseBorder)
         ) {
-            // 1. Model Quality Tier (Fast Studio vs Pro Studio)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            Column(
+                modifier = Modifier.padding(StudioSpacing.cardPadding),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                // 1. Sensor Engine (Studio Fast vs Studio Pro)
+                Column(verticalArrangement = Arrangement.spacedBy(StudioSpacing.tight)) {
                     Text(
-                        text = "SENSOR ENGINE",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Studio Engine",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MidnightIndigo
                     )
-                    Text(
-                        text = selectedTier.subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    StudioModelTier.entries.forEach { tier ->
-                        val active = tier == selectedTier
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (active) MaterialTheme.colorScheme.primaryContainer else StudioSlate,
-                            border = BorderStroke(
-                                width = if (active) 1.5.dp else 1.dp,
-                                color = if (active) TungstenAmber else HairlineSteel
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onSelectTier(tier) }
-                                .testTag("model_tier_${tier.id}")
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)
+                    ) {
+                        StudioModelTier.entries.forEach { tier ->
+                            val active = tier == selectedTier
+                            val pillShape = RoundedCornerShape(12.dp)
+                            val containerColor by animateColorAsState(
+                                targetValue = if (active) DeepPlum else DustyRoseMuted,
+                                animationSpec = tween(160),
+                                label = "tier_bg"
+                            )
+                            val contentColor by animateColorAsState(
+                                targetValue = if (active) PaleLavender else MidnightIndigo,
+                                animationSpec = tween(160),
+                                label = "tier_fg"
+                            )
+
+                            Surface(
+                                shape = pillShape,
+                                color = containerColor,
+                                border = BorderStroke(
+                                    width = if (active) 1.5.dp else 1.dp,
+                                    color = if (active) DeepPlum else DustyRoseBorder
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .defaultMinSize(minHeight = StudioSpacing.touchTarget)
+                                    .clip(pillShape)
+                                    .brandFocusRing(pillShape)
+                                    .semantics { selected = active }
+                                    .clickable(role = Role.RadioButton) { onSelectTier(tier) }
+                                    .testTag("model_tier_${tier.id}")
                             ) {
-                                Icon(
-                                    imageVector = if (tier == StudioModelTier.PRO_STUDIO) Icons.Rounded.AutoAwesome else Icons.Rounded.FlashOn,
-                                    contentDescription = null,
-                                    tint = if (active) TungstenAmber else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    text = tier.label,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = if (active) TungstenAmber else MaterialTheme.colorScheme.onSurface
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (tier == StudioModelTier.PRO_STUDIO) Icons.Rounded.AutoAwesome else Icons.Rounded.FlashOn,
+                                        contentDescription = null,
+                                        tint = contentColor,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = tier.label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = contentColor
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // 2. Output Resolution (1K / 2K / 4K)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Rounded.HighQuality,
-                            contentDescription = null,
-                            tint = TungstenAmber,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(Modifier.width(5.dp))
+                HorizontalDivider(color = DustyRose)
+
+                // 2. Output Resolution (1K / 2K / 4K)
+                Column(verticalArrangement = Arrangement.spacedBy(StudioSpacing.tight)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Rounded.HighQuality,
+                                contentDescription = null,
+                                tint = DeepPlum,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "Output Resolution",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MidnightIndigo
+                            )
+                        }
                         Text(
-                            text = "RESOLUTION",
+                            text = selectedResolution.detail,
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = DeepPlum
                         )
                     }
-                    Text(
-                        text = selectedResolution.detail,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TungstenAmber
-                    )
-                }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    HeadshotResolution.entries.forEach { res ->
-                        val active = res == selectedResolution
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (active) MaterialTheme.colorScheme.primaryContainer else StudioSlate,
-                            border = BorderStroke(
-                                width = if (active) 1.5.dp else 1.dp,
-                                color = if (active) TungstenAmber else HairlineSteel
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable { onSelectResolution(res) }
-                                .testTag("resolution_${res.label}")
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(vertical = 12.dp),
-                                contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(StudioSpacing.tight)
+                    ) {
+                        HeadshotResolution.entries.forEach { res ->
+                            val active = res == selectedResolution
+                            val pillShape = RoundedCornerShape(12.dp)
+                            val containerColor by animateColorAsState(
+                                targetValue = if (active) DeepPlum else DustyRoseMuted,
+                                animationSpec = tween(160),
+                                label = "res_bg"
+                            )
+                            val contentColor by animateColorAsState(
+                                targetValue = if (active) PaleLavender else MidnightIndigo,
+                                animationSpec = tween(160),
+                                label = "res_fg"
+                            )
+
+                            Surface(
+                                shape = pillShape,
+                                color = containerColor,
+                                border = BorderStroke(
+                                    width = if (active) 1.5.dp else 1.dp,
+                                    color = if (active) DeepPlum else DustyRoseBorder
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .defaultMinSize(minHeight = StudioSpacing.touchTarget)
+                                    .clip(pillShape)
+                                    .brandFocusRing(pillShape)
+                                    .semantics { selected = active }
+                                    .clickable(role = Role.RadioButton) { onSelectResolution(res) }
+                                    .testTag("resolution_${res.label}")
                             ) {
-                                Text(
-                                    text = res.label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (active) TungstenAmber else MaterialTheme.colorScheme.onSurface
-                                )
+                                Box(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = res.label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = contentColor
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // 3. Aspect Ratio Selector (All 8 Ratios)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "FRAME RATIO",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = selectedAspectRatio.hint,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
+                HorizontalDivider(color = DustyRose)
 
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(HeadshotAspectRatio.entries, key = { it.label }) { ratio ->
-                        val active = ratio == selectedAspectRatio
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (active) MaterialTheme.colorScheme.primaryContainer else StudioSlate,
-                            border = BorderStroke(
-                                width = if (active) 1.5.dp else 1.dp,
-                                color = if (active) TungstenAmber else HairlineSteel
-                            ),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable { onSelectAspectRatio(ratio) }
-                                .testTag("aspect_ratio_${ratio.label.replace(":", "_")}")
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                                contentAlignment = Alignment.Center
+                // 3. Aspect Ratio Selector (All 8 Ratios with accessible 48dp touch height)
+                Column(verticalArrangement = Arrangement.spacedBy(StudioSpacing.tight)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Aspect Ratio",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MidnightIndigo
+                        )
+                        Text(
+                            text = selectedAspectRatio.hint,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = DeepPlum
+                        )
+                    }
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(StudioSpacing.tight)) {
+                        items(HeadshotAspectRatio.entries, key = { it.label }) { ratio ->
+                            val active = ratio == selectedAspectRatio
+                            val chipShape = RoundedCornerShape(12.dp)
+                            val containerColor by animateColorAsState(
+                                targetValue = if (active) DeepPlum else DustyRoseMuted,
+                                animationSpec = tween(160),
+                                label = "ratio_bg"
+                            )
+                            val contentColor by animateColorAsState(
+                                targetValue = if (active) PaleLavender else MidnightIndigo,
+                                animationSpec = tween(160),
+                                label = "ratio_fg"
+                            )
+
+                            Surface(
+                                shape = chipShape,
+                                color = containerColor,
+                                border = BorderStroke(
+                                    width = if (active) 1.5.dp else 1.dp,
+                                    color = if (active) DeepPlum else DustyRoseBorder
+                                ),
+                                modifier = Modifier
+                                    .defaultMinSize(minWidth = 58.dp, minHeight = StudioSpacing.touchTarget)
+                                    .clip(chipShape)
+                                    .brandFocusRing(chipShape)
+                                    .semantics { selected = active }
+                                    .clickable(role = Role.RadioButton) { onSelectAspectRatio(ratio) }
+                                    .testTag("aspect_ratio_${ratio.label.replace(":", "_")}")
                             ) {
-                                Text(
-                                    text = ratio.label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (active) TungstenAmber else MaterialTheme.colorScheme.onSurface
-                                )
+                                Box(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = ratio.label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = contentColor
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // 4. Optional Wardrobe / Mood Notes
-            OutlinedTextField(
-                value = customNotes,
-                onValueChange = onCustomNotesChange,
-                label = { Text("Wardrobe or art direction notes (optional)") },
-                placeholder = { Text("e.g., Navy blazer, warm rim light, subtle confident smile") },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = TungstenAmber,
-                    unfocusedBorderColor = HairlineSteel,
-                    focusedContainerColor = StudioSlate,
-                    unfocusedContainerColor = StudioSlate
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("custom_style_notes_input")
-            )
+                HorizontalDivider(color = DustyRose)
+
+                // 4. Progressive Disclosure: Optional Wardrobe & Art Direction Notes
+                Column(verticalArrangement = Arrangement.spacedBy(StudioSpacing.controlGap)) {
+                    val toggleShape = RoundedCornerShape(12.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = StudioSpacing.touchTarget)
+                            .clip(toggleShape)
+                            .background(if (showCustomNotes || customNotes.isNotBlank()) DustyRoseMuted else Color.Transparent)
+                            .clickable { showCustomNotes = !showCustomNotes }
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                            .testTag("toggle_custom_notes_button"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Tune,
+                                contentDescription = null,
+                                tint = DeepPlum,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "Custom Styling Notes",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MidnightIndigo
+                                )
+                                Text(
+                                    text = if (customNotes.isNotBlank()) "Custom direction active" else "Optional wardrobe, smile, or lighting cue",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DeepPlum
+                                )
+                            }
+                        }
+
+                        Icon(
+                            imageVector = if (showCustomNotes) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                            contentDescription = if (showCustomNotes) "Collapse custom styling notes" else "Expand custom styling notes",
+                            tint = MidnightIndigo,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = showCustomNotes,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        LabeledStudioTextField(
+                            label = "Wardrobe & Art Direction Notes (Optional)",
+                            value = customNotes,
+                            onValueChange = onCustomNotesChange,
+                            placeholder = "e.g., Navy blazer, subtle confident smile, warm rim light",
+                            helperText = "Added directly to the photographer's studio lighting brief.",
+                            singleLine = false,
+                            minLines = 2,
+                            maxLines = 3,
+                            fieldModifier = Modifier.testTag("custom_style_notes_input")
+                        )
+                    }
+                }
+            }
         }
     }
 }

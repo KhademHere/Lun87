@@ -3,47 +3,48 @@ package com.example.ui.theme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 
-private val DarkroomColorScheme = darkColorScheme(
-    primary = TungstenAmber,
-    onPrimary = DeepInk,
-    primaryContainer = TungstenContainer,
-    onPrimaryContainer = OnTungstenContainer,
-    secondary = SilverHalide,
-    onSecondary = SilverInk,
-    secondaryContainer = SilverContainer,
-    onSecondaryContainer = WarmPaperWhite,
-    tertiary = WarmCopper,
-    onTertiary = CopperInk,
-    tertiaryContainer = CopperContainer,
-    onTertiaryContainer = WarmPaperWhite,
-    background = ObsidianDarkroom,
-    onBackground = WarmPaperWhite,
-    surface = ObsidianDarkroom,
-    onSurface = WarmPaperWhite,
-    surfaceVariant = StudioSlate,
-    onSurfaceVariant = MutedGraphite,
-    surfaceContainerLowest = ObsidianDarkroom,
-    surfaceContainerLow = FilmTrayCharcoal,
-    surfaceContainer = StudioSlate,
-    surfaceContainerHigh = LoupePanel,
-    surfaceContainerHighest = ElevatedGraphite,
-    outline = SubtleOutline,
-    outlineVariant = HairlineSteel,
-    error = SafelightCrimson,
-    onError = CrimsonInk,
-    errorContainer = CrimsonContainer,
-    onErrorContainer = WarmPaperWhite
+// WCAG AA / AAA light editorial scheme mapped strictly to the five-color brand palette
+private val BrandLightColorScheme = lightColorScheme(
+    primary = DeepPlum,
+    onPrimary = PaleLavender,
+    primaryContainer = DustyRoseMuted,
+    onPrimaryContainer = MidnightIndigo,
+    secondary = OrchidMauve,
+    onSecondary = PaleLavender,
+    secondaryContainer = DustyRose,
+    onSecondaryContainer = MidnightIndigo,
+    tertiary = MidnightIndigo,
+    onTertiary = PaleLavender,
+    tertiaryContainer = DustyRoseMuted,
+    onTertiaryContainer = MidnightIndigo,
+    background = PaleLavender,
+    onBackground = MidnightIndigo,
+    surface = PaleLavender,
+    onSurface = MidnightIndigo,
+    surfaceVariant = DustyRose,
+    onSurfaceVariant = DeepPlum,
+    surfaceContainerLowest = PaleLavenderElevated,
+    surfaceContainerLow = PaleLavenderSoft,
+    surfaceContainer = DustyRoseMuted,
+    surfaceContainerHigh = DustyRose,
+    surfaceContainerHighest = DustyRoseBorder,
+    outline = OrchidMauve,
+    outlineVariant = DustyRoseBorder,
+    error = DeepPlumDestructive,
+    onError = PaleLavender,
+    errorContainer = DustyRoseMuted,
+    onErrorContainer = MidnightIndigo
 )
 
 private val LumenShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(14.dp),
-    large = RoundedCornerShape(20.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(22.dp),
     extraLarge = RoundedCornerShape(28.dp)
 )
 
@@ -52,7 +53,7 @@ fun LumenStudioTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = DarkroomColorScheme,
+        colorScheme = BrandLightColorScheme,
         typography = LumenTypography,
         shapes = LumenShapes,
         content = content

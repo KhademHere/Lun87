@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -19,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Camera
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.AsyncOpState
@@ -39,10 +39,14 @@ import com.example.model.HeadshotStylePreset
 import com.example.model.StudioModelTier
 import com.example.ui.components.CameraHudControlsPanel
 import com.example.ui.components.DarkroomViewport
+import com.example.ui.components.PrimaryCtaButton
 import com.example.ui.components.StylePresetCarousel
-import com.example.ui.theme.DeepInk
-import com.example.ui.theme.StudioSlate
-import com.example.ui.theme.TungstenAmber
+import com.example.ui.theme.DeepPlum
+import com.example.ui.theme.DustyRoseBorder
+import com.example.ui.theme.DustyRoseMuted
+import com.example.ui.theme.MidnightIndigo
+import com.example.ui.theme.StudioSpacing
+import com.example.ui.theme.tabular
 import com.example.ui.viewmodel.StudioUiState
 
 @Composable
@@ -68,20 +72,20 @@ fun StudioScreen(
     val isBusy = state.generationState is AsyncOpState.Loading || state.retouchState is AsyncOpState.Loading
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val isWideLayout = maxWidth >= 780.dp
+        val isWideLayout = maxWidth >= 820.dp
 
         if (isWideLayout) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    .padding(horizontal = StudioSpacing.sectionGap, vertical = StudioSpacing.cardPadding),
+                horizontalArrangement = Arrangement.spacedBy(StudioSpacing.macroGap)
             ) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(StudioSpacing.sectionGap)
                 ) {
                     StudioHeader(state = state)
                     DarkroomViewport(
@@ -97,15 +101,16 @@ fun StudioScreen(
                         onRetryGeneration = onDevelopHeadshot,
                         onCancelGeneration = onCancelGeneration
                     )
+                    Spacer(modifier = Modifier.height(StudioSpacing.cardPadding))
                 }
 
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                    verticalArrangement = Arrangement.spacedBy(StudioSpacing.sectionGap)
                 ) {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     StylePresetCarousel(
                         selectedPreset = state.selectedPreset,
                         onSelectPreset = onSelectPreset
@@ -120,12 +125,12 @@ fun StudioScreen(
                         onSelectResolution = onSelectResolution,
                         onCustomNotesChange = onCustomNotesChange
                     )
-                    DevelopCtaButton(
+                    DevelopSectionCta(
                         state = state,
                         enabled = state.sourceSelfie != null && !isBusy,
                         onClick = onDevelopHeadshot
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(StudioSpacing.cardPadding))
                 }
             }
         } else {
@@ -135,11 +140,11 @@ fun StudioScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .widthIn(max = 600.dp)
+                        .widthIn(max = StudioSpacing.maxCompactContentWidth)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                        .padding(horizontal = StudioSpacing.screenEdge, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(StudioSpacing.sectionGap)
                 ) {
                     StudioHeader(state = state)
 
@@ -173,13 +178,13 @@ fun StudioScreen(
                         onCustomNotesChange = onCustomNotesChange
                     )
 
-                    DevelopCtaButton(
+                    DevelopSectionCta(
                         state = state,
                         enabled = state.sourceSelfie != null && !isBusy,
                         onClick = onDevelopHeadshot
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(StudioSpacing.controlGap))
                 }
             }
         }
@@ -193,72 +198,86 @@ private fun StudioHeader(state: StudioUiState) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MidnightIndigo
             )
             Text(
-                text = stringResource(R.string.studio_subtitle),
-                style = MaterialTheme.typography.labelSmall,
-                color = TungstenAmber
+                text = "AI Headshot Photographer",
+                style = MaterialTheme.typography.bodySmall,
+                color = DeepPlum
             )
         }
 
+        Spacer(modifier = Modifier.width(StudioSpacing.controlGap))
+
         Surface(
             shape = RoundedCornerShape(10.dp),
-            color = StudioSlate
+            color = DustyRoseMuted,
+            border = BorderStroke(1.dp, DustyRoseBorder)
         ) {
             Text(
                 text = "${state.selectedModelTier.hudBadge} · ${state.selectedAspectRatio.label} · ${state.selectedResolution.label}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                style = MaterialTheme.typography.labelMedium.tabular(),
+                color = MidnightIndigo,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
             )
         }
     }
 }
 
 @Composable
-private fun DevelopCtaButton(
+private fun DevelopSectionCta(
     state: StudioUiState,
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = TungstenAmber,
-            contentColor = DeepInk,
-            disabledContainerColor = StudioSlate,
-            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 20.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("develop_headshot_button")
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(StudioSpacing.tight),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Rounded.Camera,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = if (state.developedHeadshot == null) {
-                stringResource(R.string.action_develop_headshot)
-            } else {
-                "Develop New Exposure"
-            },
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = "${state.selectedResolution.label} · ${state.selectedAspectRatio.label}",
-            style = MaterialTheme.typography.labelSmall
-        )
+        PrimaryCtaButton(
+            onClick = onClick,
+            enabled = enabled,
+            contentPadding = PaddingValues(vertical = 16.dp, horizontal = 20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("develop_headshot_button")
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Camera,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = if (state.developedHeadshot == null) {
+                    stringResource(R.string.action_develop_headshot)
+                } else {
+                    "Develop New Exposure"
+                },
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = "${state.selectedResolution.label} · ${state.selectedAspectRatio.label}",
+                style = MaterialTheme.typography.labelMedium.tabular()
+            )
+        }
+
+        if (state.sourceSelfie == null) {
+            Text(
+                text = "Choose or capture a selfie above to develop your headshot.",
+                style = MaterialTheme.typography.bodySmall,
+                color = DeepPlum,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
